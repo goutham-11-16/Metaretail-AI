@@ -1,0 +1,1030 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>MetaRetail AI - Mobile Camera Streamer</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: #090d16;
+            color: #f8fafc;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .header {
+            padding: 12px 16px;
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(8px);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            z-index: 30;
+        }
+        .header-title { font-weight: 700; font-size: 15px; letter-spacing: -0.02em; display: flex; align-items: center; gap: 8px; }
+        .logo-badge { background: #3b82f6; color: #fff; font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 4px; }
+        
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 9999px;
+            font-size: 12px;
+            font-weight: 600;
+            background: rgba(255,255,255,0.08);
+        }
+        .dot { width: 8px; height: 8px; border-radius: 50%; background: #94a3b8; transition: background 0.3s; }
+        .dot.live { background: #22c55e; box-shadow: 0 0 10px #22c55e; animation: pulse 1.8s infinite; }
+        .dot.connecting { background: #eab308; animation: pulse 1s infinite; }
+        .dot.error { background: #ef4444; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.35; } 100% { opacity: 1; } }
+
+        .viewport {
+            position: relative;
+            flex: 1;
+            width: 100%;
+            background: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        canvas { display: none; }
+
+        /* Telemetry HUD Top Bar */
+        .hud-overlay {
+            position: absolute;
+            top: 14px;
+            left: 14px;
+            right: 14px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            z-index: 25;
+            pointer-events: none;
+        }
+        .hud-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 11px;
+            border-radius: 9999px;
+            font-size: 11px;
+            font-weight: 600;
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.18);
+            color: #f1f5f9;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.4);
+        }
+        .hud-pill .hud-val {
+            color: #38bdf8;
+            font-family: monospace;
+            font-weight: 700;
+        }
+        .hud-pill.lens-pill .hud-val { color: #a855f7; }
+        .hud-pill.quality-pill .hud-val { color: #34d399; }
+        .hud-pill.fps-pill .hud-val { color: #facc15; }
+        .hud-pill.signal-pill .hud-val { color: #38bdf8; }
+        .hud-pill.signal-pill.signal-5 .hud-val { color: #22c55e; }
+        .hud-pill.signal-pill.signal-4 .hud-val { color: #38bdf8; }
+        .hud-pill.signal-pill.signal-3 .hud-val { color: #facc15; }
+        .hud-pill.signal-pill.signal-2 .hud-val { color: #f97316; }
+        .hud-pill.signal-pill.signal-1 .hud-val { color: #ef4444; }
+
+        /* Security Warning Overlay */
+        .modal-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.95);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            text-align: center;
+            z-index: 50;
+        }
+        .modal-card {
+            background: #1e293b;
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 16px;
+            padding: 24px;
+            max-width: 380px;
+            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.5);
+        }
+        .modal-card h3 { font-size: 18px; font-weight: 700; margin-bottom: 10px; color: #f8fafc; }
+        .modal-card p { font-size: 13px; color: #94a3b8; line-height: 1.5; margin-bottom: 20px; }
+        .btn-primary {
+            display: block;
+            width: 100%;
+            padding: 13px 16px;
+            background: #2563eb;
+            color: #fff;
+            font-size: 14px;
+            font-weight: 700;
+            border-radius: 10px;
+            border: none;
+            cursor: pointer;
+            text-decoration: none;
+            box-shadow: 0 4px 14px rgba(37,99,235,0.4);
+        }
+        .btn-secondary {
+            display: block;
+            width: 100%;
+            padding: 10px 16px;
+            background: rgba(255,255,255,0.08);
+            color: #cbd5e1;
+            font-size: 13px;
+            font-weight: 600;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.1);
+            margin-top: 10px;
+            cursor: pointer;
+        }
+
+        /* Controls Panel */
+        .controls {
+            position: absolute;
+            bottom: 16px;
+            left: 16px;
+            right: 16px;
+            background: rgba(15, 23, 42, 0.88);
+            backdrop-filter: blur(14px);
+            border: 1px solid rgba(255,255,255,0.14);
+            border-radius: 14px;
+            padding: 12px 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 30;
+        }
+        .controls-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+        }
+        .selectors-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            width: 100%;
+        }
+        .select-group {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .select-group label {
+            font-size: 10px;
+            font-weight: 600;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        .action-btns {
+            display: flex;
+            gap: 8px;
+        }
+        .icon-btn {
+            flex: 1;
+            padding: 11px;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.12);
+            color: #f8fafc;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transition: all 0.2s;
+        }
+        .icon-btn:hover {
+            background: rgba(255,255,255,0.14);
+        }
+        .icon-btn.primary {
+            background: #2563eb;
+            border-color: #3b82f6;
+        }
+        .icon-btn.danger {
+            background: #dc2626;
+            border-color: #ef4444;
+        }
+
+        .select-sm {
+            width: 100%;
+            padding: 7px 10px;
+            background: #0f172a;
+            color: #f8fafc;
+            border: 1px solid rgba(255,255,255,0.18);
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+            outline: none;
+        }
+        .select-sm:focus {
+            border-color: #38bdf8;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="header-title">
+            <span class="logo-badge">AI</span>
+            <span>MetaRetail Camera</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <button type="button" onclick="toggleDebugLogs()" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color: #cbd5e1; border-radius: 9999px; padding: 4px 10px; font-size: 11px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 4px;">
+                📋 Logs (<span id="log-count">0</span>)
+            </button>
+            <div class="status-pill" id="status-pill">
+                <span class="dot" id="status-dot"></span>
+                <span id="status-text">Ready</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- In-App Browser Warning Banner -->
+    <div id="in-app-banner" style="display: none; background: #b45309; color: #fef3c7; padding: 10px 14px; font-size: 12px; z-index: 60; text-align: center; border-bottom: 1px solid #d97706;">
+        <span>⚠️ In-app browser detected (camera may be blocked). Tap <b>⋮</b> or Share & select <b>"Open in Chrome / Safari"</b>.</span>
+        <button onclick="copyCurrentUrl()" style="margin-left: 8px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.3); color: #fff; padding: 3px 8px; border-radius: 4px; font-size: 11px; cursor: pointer;">Copy Link</button>
+    </div>
+
+    <div class="viewport">
+        <video id="video" autoplay playsinline webkit-playsinline muted></video>
+        <canvas id="canvas"></canvas>
+
+        <!-- Tap-To-Start Overlay for Mobile Autoplay Restrictions -->
+        <div class="modal-overlay" id="tap-to-start-overlay" style="display: flex; cursor: pointer; z-index: 45;" onclick="initCamera(true)">
+            <div class="modal-card" style="border: 2px solid #3b82f6; text-align: center;">
+                <div style="font-size: 44px; margin-bottom: 8px;">📹</div>
+                <h3 style="font-size: 19px; font-weight: 800; color: #f8fafc; margin-bottom: 8px;">Tap to Start Camera</h3>
+                <p style="font-size: 13px; color: #94a3b8; line-height: 1.5; margin-bottom: 18px;">
+                    Mobile browsers require 1 tap to grant camera access and start streaming live HD video to MetaRetail AI.
+                </p>
+                <button class="btn-primary" style="font-size: 15px; padding: 13px 20px; background: #2563eb;">
+                    ▶ Activate Phone Camera
+                </button>
+                <button type="button" class="btn-secondary" onclick="event.stopPropagation(); toggleDebugLogs();" style="margin-top: 12px;">
+                    📋 View Live Logs & Diagnostics
+                </button>
+            </div>
+        </div>
+
+        <div id="orientation-hint" style="display:none; position: absolute; top: 12px; left: 14px; right: 14px; z-index: 25; font-size: 11px; padding: 6px 12px; border-radius: 8px; background: rgba(15, 23, 42, 0.88); backdrop-filter: blur(8px); border: 1px solid rgba(59, 130, 246, 0.4); color: #93c5fd; text-align: center;">
+            📐 Rotate phone to landscape for full 1280×720 (16:9) CCTV view
+        </div>
+
+        <!-- Live Telemetry HUD Bar on Phone Viewport -->
+        <div class="hud-overlay" id="hud-overlay">
+            <div class="hud-pill signal-pill" id="hud-signal-pill">
+                <span id="hud-signal-icon">📶</span>
+                <span class="hud-val" id="hud-signal">5/5 Ultra (15ms)</span>
+            </div>
+            <div class="hud-pill fps-pill" id="hud-fps-pill">
+                <span>⚡</span>
+                <span class="hud-val" id="hud-fps">30 FPS</span>
+            </div>
+            <div class="hud-pill lens-pill">
+                <span>📷</span>
+                <span class="hud-val" id="hud-lens">Back Lens</span>
+            </div>
+            <div class="hud-pill">
+                <span>📐</span>
+                <span class="hud-val" id="hud-dim">Detecting...</span>
+            </div>
+            <div class="hud-pill quality-pill">
+                <span>🎨</span>
+                <span class="hud-val" id="hud-quality">Adaptive HD</span>
+            </div>
+        </div>
+
+        <!-- Collapsible On-Screen Diagnostic Drawer -->
+        <div id="debug-drawer" style="display: none; position: absolute; bottom: 85px; left: 12px; right: 12px; max-height: 240px; overflow-y: auto; background: rgba(15, 23, 42, 0.96); border: 1px solid rgba(255,255,255,0.2); border-radius: 12px; padding: 12px; font-family: monospace; font-size: 11px; z-index: 35; box-shadow: 0 10px 25px rgba(0,0,0,0.6);">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 6px; margin-bottom: 8px;">
+                <span style="font-weight: bold; color: #38bdf8;">📋 Live Diagnostics & Telemetry Log</span>
+                <div style="display: flex; gap: 8px;">
+                    <button type="button" onclick="clearLogs()" style="background: none; border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; color: #94a3b8; font-size: 10px; padding: 2px 6px; cursor: pointer;">Clear</button>
+                    <button type="button" onclick="toggleDebugLogs()" style="background: none; border: none; color: #94a3b8; font-size: 14px; cursor: pointer;">✕</button>
+                </div>
+            </div>
+            <div id="debug-log-list" style="display: flex; flex-direction: column; gap: 4px;"></div>
+        </div>
+
+        <!-- Security / Permission Modal -->
+        <div class="modal-overlay" id="security-modal" style="display: none; z-index: 50;">
+            <div class="modal-card">
+                <div style="font-size: 38px; margin-bottom: 12px;" id="modal-icon">🔒</div>
+                <h3 id="modal-title">HTTPS Connection Required</h3>
+                <p id="modal-desc">
+                    Modern mobile browsers (Safari & Chrome) strictly disable camera permissions over plain HTTP on local Wi-Fi.
+                </p>
+                <a id="https-redirect-btn" class="btn-primary" href="#">Switch to Secure HTTPS (8443) 🚀</a>
+                <button class="btn-secondary" id="retry-perm-btn" style="display:none;" onclick="initCamera(true)">Grant Camera Permission</button>
+                <button class="btn-secondary" onclick="toggleDebugLogs()" style="margin-top: 8px;">📋 View Error Diagnostics</button>
+                <button class="btn-secondary" onclick="toggleDetails()" style="margin-top: 8px;">Android Chrome Instructions</button>
+                <div id="android-instructions" style="display: none; text-align: left; margin-top: 12px; font-size: 11px; color: #94a3b8; background: #0f172a; padding: 10px; border-radius: 6px;">
+                    1. In Chrome on phone, go to:<br>
+                    <b style="color:#60a5fa">chrome://flags/#unsafely-treat-insecure-origin-as-secure</b><br><br>
+                    2. Enable it and add this address:<br>
+                    <b style="color:#60a5fa" id="current-origin-text"></b><br><br>
+                    3. Tap <b>Relaunch</b> at bottom.
+                </div>
+            </div>
+        </div>
+
+        <!-- Controls Floating Deck -->
+        <div class="controls">
+            <div class="selectors-row">
+                <div class="select-group">
+                    <label>Camera Field / Resolution</label>
+                    <select id="res-select" class="select-sm" onchange="changeResolutionPreset()">
+                        <option value="480p" selected>⚡ 480p Fast HD (854×480) — Low Latency (Recommended)</option>
+                        <option value="360p">🚀 360p Ultra (640×360) — Zero Latency (Weak Wi-Fi)</option>
+                        <option value="720p">720p HD (1280×720) — High Detail</option>
+                        <option value="1080p">1080p FHD (1920×1080) — Studio High Res</option>
+                        <option value="auto">Auto (Match Native Sensor)</option>
+                    </select>
+                </div>
+                <div class="select-group">
+                    <label>Quality & Bitrate</label>
+                    <select id="quality-select" class="select-sm" onchange="onQualityPresetChange()">
+                        <option value="auto" selected>⚡ Adaptive (High FPS Auto)</option>
+                        <option value="0.85">High HD (85%)</option>
+                        <option value="0.70">Balanced (70%)</option>
+                        <option value="0.60">Fast (60%)</option>
+                        <option value="0.45">Eco (45%)</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="action-btns">
+                <button class="icon-btn" id="flip-btn" onclick="flipCamera()">🔄 Switch Camera Field</button>
+                <button class="icon-btn danger" id="stream-toggle-btn" onclick="toggleStream()">⏹ Stop Stream</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const pathParts = window.location.pathname.split('/').filter(Boolean);
+        const cameraId = pathParts[pathParts.length - 1] || urlParams.get('camera_id') || '1';
+        const token = urlParams.get('token') || '';
+
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const statusText = document.getElementById('status-text');
+        const statusDot = document.getElementById('status-dot');
+        const hudLens = document.getElementById('hud-lens');
+        const hudDim = document.getElementById('hud-dim');
+        const hudQuality = document.getElementById('hud-quality');
+        const hudFps = document.getElementById('hud-fps');
+        const resSelect = document.getElementById('res-select');
+        const qualitySelect = document.getElementById('quality-select');
+        const streamToggleBtn = document.getElementById('stream-toggle-btn');
+        const securityModal = document.getElementById('security-modal');
+        const modalTitle = document.getElementById('modal-title');
+        const modalDesc = document.getElementById('modal-desc');
+        const httpsRedirectBtn = document.getElementById('https-redirect-btn');
+        const retryPermBtn = document.getElementById('retry-perm-btn');
+
+        let currentFacingMode = 'environment';
+        let currentStream = null;
+        let ws = null;
+        let isStreaming = false;
+        let frameCount = 0;
+        let lastFpsCheck = performance.now();
+        let loopTimer = null;
+        let measuredFps = 0;
+
+        // Signal Strength & Adaptive High-FPS Governor
+        let signalBars = 5; // 1 to 5
+        let signalQualityText = 'Ultra';
+        let targetFps = 30; // Biased toward high 30 FPS
+        let dynamicQuality = 0.65;
+        let currentTargetInterval = 1000 / 30; // 33.3ms for 30 FPS
+        let smoothedRtt = 15; // ms
+        let pingInterval = null;
+        let consecutiveCleanCycles = 0;
+
+        document.getElementById('current-origin-text').innerText = window.location.origin;
+
+        // Build HTTPS Link for Port 8443
+        const targetHost = window.location.hostname;
+        const httpsUrl = `https://${targetHost}:8443${window.location.pathname}${window.location.search}`;
+        httpsRedirectBtn.href = httpsUrl;
+
+        function addLog(msg, level = 'info') {
+            const now = new Date();
+            const timeStr = now.toTimeString().split(' ')[0];
+            const logItem = `[${timeStr}] ${msg}`;
+            
+            if (level === 'error') console.error(logItem);
+            else if (level === 'warn') console.warn(logItem);
+            else console.log(logItem);
+
+            const logList = document.getElementById('debug-log-list');
+            const logCountEl = document.getElementById('log-count');
+            if (logList) {
+                const row = document.createElement('div');
+                row.style.wordBreak = 'break-all';
+                row.style.lineHeight = '1.4';
+                if (level === 'error') row.style.color = '#f87171';
+                else if (level === 'warn') row.style.color = '#facc15';
+                else if (level === 'success') row.style.color = '#4ade80';
+                else row.style.color = '#cbd5e1';
+                row.innerText = logItem;
+                logList.appendChild(row);
+                logList.parentElement.scrollTop = logList.parentElement.scrollHeight;
+            }
+            if (logCountEl) {
+                logCountEl.innerText = String(document.getElementById('debug-log-list')?.children?.length || 0);
+            }
+        }
+
+        function toggleDebugLogs() {
+            const el = document.getElementById('debug-drawer');
+            if (el) {
+                el.style.display = el.style.display === 'none' ? 'block' : 'none';
+            }
+        }
+
+        function clearLogs() {
+            const logList = document.getElementById('debug-log-list');
+            const logCountEl = document.getElementById('log-count');
+            if (logList) logList.innerHTML = '';
+            if (logCountEl) logCountEl.innerText = '0';
+        }
+
+        function copyCurrentUrl() {
+            navigator.clipboard.writeText(window.location.href);
+            alert("Stream URL copied! Paste into Google Chrome or Apple Safari.");
+        }
+
+        function detectInAppBrowser() {
+            const ua = navigator.userAgent || navigator.vendor || window.opera || '';
+            const isInApp = /Instagram|FBAN|FBAV|Line|MicroMessenger|WhatsApp|Snapchat|ByteDance|musical_ly/i.test(ua);
+            if (isInApp) {
+                const banner = document.getElementById('in-app-banner');
+                if (banner) banner.style.display = 'block';
+                addLog("⚠️ In-app browser detected: camera access might be restricted by host app. Open in Chrome or Safari.", "warn");
+            }
+        }
+
+        function toggleDetails() {
+            const el = document.getElementById('android-instructions');
+            el.style.display = el.style.display === 'none' ? 'block' : 'none';
+        }
+
+        function setStatus(text, type) {
+            statusText.innerText = text;
+            statusDot.className = 'dot';
+            if (type === 'live') statusDot.classList.add('live');
+            else if (type === 'connecting') statusDot.classList.add('connecting');
+            else if (type === 'error') statusDot.classList.add('error');
+        }
+
+        function getAspectRatio(w, h) {
+            if (!w || !h) return '';
+            const gcd = (a, b) => b === 0 ? a : gcd(b, a % b);
+            const d = gcd(w, h);
+            const rW = Math.round(w / d);
+            const rH = Math.round(h / d);
+            if ((rW === 16 && rH === 9) || (rW === 9 && rH === 16)) return '16:9';
+            if ((rW === 4 && rH === 3) || (rW === 3 && rH === 4)) return '4:3';
+            return `${rW}:${rH}`;
+        }
+
+        function updateCanvasDimensions() {
+            const rawW = video.videoWidth;
+            const rawH = video.videoHeight;
+            const selectedPreset = resSelect.value || '480p';
+
+            if (!rawW || !rawH) {
+                canvas.width = 854;
+                canvas.height = 480;
+                return;
+            }
+
+            const isLandscape = rawW >= rawH;
+
+            if (selectedPreset === '480p') {
+                if (isLandscape) {
+                    canvas.width = 854;
+                    canvas.height = 480;
+                } else {
+                    canvas.width = 480;
+                    canvas.height = 854;
+                }
+            } else if (selectedPreset === '360p') {
+                if (isLandscape) {
+                    canvas.width = 640;
+                    canvas.height = 360;
+                } else {
+                    canvas.width = 360;
+                    canvas.height = 640;
+                }
+            } else if (selectedPreset === '720p') {
+                if (isLandscape) {
+                    canvas.width = 1280;
+                    canvas.height = 720;
+                } else {
+                    canvas.width = 720;
+                    canvas.height = 1280;
+                }
+            } else if (selectedPreset === '1080p') {
+                if (isLandscape) {
+                    canvas.width = 1920;
+                    canvas.height = 1080;
+                } else {
+                    canvas.width = 1080;
+                    canvas.height = 1920;
+                }
+            } else { // auto
+                canvas.width = rawW;
+                canvas.height = rawH;
+            }
+        }
+
+        function evaluateSignalAndAdjustRate() {
+            const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+            const netEffectiveType = conn && conn.effectiveType ? conn.effectiveType : '4g';
+            const hasBufferPressure = ws && ws.bufferedAmount > 32 * 1024;
+
+            // Stable tunnel & mobile RTT brackets (allows 25-30 FPS high-rate streaming with minimal latency)
+            if (!hasBufferPressure && smoothedRtt < 160 && (netEffectiveType === '4g' || !conn)) {
+                signalBars = 5;
+                signalQualityText = 'Ultra';
+                targetFps = 30;
+                dynamicQuality = 0.70;
+            }
+            else if (!hasBufferPressure && smoothedRtt < 280) {
+                signalBars = 4;
+                signalQualityText = 'Fast';
+                targetFps = 25;
+                dynamicQuality = 0.65;
+            }
+            else if (smoothedRtt < 450) {
+                signalBars = 3;
+                signalQualityText = 'Fair';
+                targetFps = 20;
+                dynamicQuality = 0.60;
+            }
+            else if (smoothedRtt < 650 || hasBufferPressure) {
+                signalBars = 2;
+                signalQualityText = 'Weak';
+                targetFps = 15;
+                dynamicQuality = 0.50;
+            }
+            else {
+                signalBars = 1;
+                signalQualityText = 'Low';
+                targetFps = 12;
+                dynamicQuality = 0.40;
+            }
+
+            currentTargetInterval = 1000 / targetFps;
+            updateTelemetryDisplay();
+        }
+
+        function onQualityPresetChange() {
+            evaluateSignalAndAdjustRate();
+            updateTelemetryDisplay();
+        }
+
+        function startPingPong() {
+            if (pingInterval) clearInterval(pingInterval);
+            pingInterval = setInterval(() => {
+                if (ws && ws.readyState === WebSocket.OPEN) {
+                    try {
+                        ws.send(JSON.stringify({ type: 'ping', t: performance.now() }));
+                    } catch (e) {}
+                }
+            }, 1000);
+        }
+
+        function stopPingPong() {
+            if (pingInterval) clearInterval(pingInterval);
+            pingInterval = null;
+        }
+
+        function updateTelemetryDisplay() {
+            const w = canvas.width || video.videoWidth || 0;
+            const h = canvas.height || video.videoHeight || 0;
+            const ar = getAspectRatio(w, h);
+            const dimText = w && h ? `${w}×${h}${ar ? ` (${ar})` : ''}` : 'Detecting...';
+            hudDim.innerText = dimText;
+
+            const isLandscape = (w >= h);
+            const lensLabel = currentFacingMode === 'environment' ? 'Back Lens' : 'Front Lens';
+            hudLens.innerText = `${lensLabel} (${isLandscape ? '16:9 Landscape' : '9:16 Portrait'})`;
+
+            const qVal = qualitySelect.value;
+            const isAuto = qVal === 'auto';
+            const q = isAuto ? dynamicQuality : (parseFloat(qVal) || 0.85);
+            const qPercent = Math.round(q * 100);
+            const qPreset = isAuto 
+                ? `⚡ Dynamic (${qPercent}%)` 
+                : (q >= 0.85 ? `High HD (${qPercent}%)` : (q >= 0.7 ? `Balanced (${qPercent}%)` : `Eco (${qPercent}%)`));
+            hudQuality.innerText = qPreset;
+            
+            const displayFps = measuredFps > 0 ? measuredFps : targetFps;
+            hudFps.innerText = `${displayFps} FPS (${targetFps} Max)`;
+
+            // Live Signal Pill HUD Update
+            const signalPill = document.getElementById('hud-signal-pill');
+            const hudSignal = document.getElementById('hud-signal');
+            if (signalPill && hudSignal) {
+                signalPill.className = `hud-pill signal-pill signal-${signalBars}`;
+                const rttStr = smoothedRtt > 0 ? ` • ${Math.round(smoothedRtt)}ms` : '';
+                hudSignal.innerText = `${signalBars}/5 ${signalQualityText}${rttStr}`;
+            }
+
+            const orientHint = document.getElementById('orientation-hint');
+            if (orientHint) {
+                orientHint.style.display = (!isLandscape && w > 0) ? 'block' : 'none';
+            }
+        }
+
+        function getAdaptiveConstraints(preset, facingMode) {
+            const isLandscape = (window.innerWidth >= window.innerHeight);
+            let idealW = 854;
+            let idealH = 480;
+
+            if (preset === '1080p') {
+                idealW = 1920; idealH = 1080;
+            } else if (preset === '720p') {
+                idealW = 1280; idealH = 720;
+            } else if (preset === '480p') {
+                idealW = 854; idealH = 480;
+            } else if (preset === '360p') {
+                idealW = 640; idealH = 360;
+            } else if (preset === 'auto') {
+                idealW = 1280; idealH = 720;
+            }
+
+            const targetW = isLandscape ? idealW : idealH;
+            const targetH = isLandscape ? idealH : idealW;
+
+            return [
+                // 1. High priority ideal match without strict min (prevents OverconstrainedError on non-standard sensors)
+                {
+                    video: {
+                        facingMode: { ideal: facingMode },
+                        width: { ideal: targetW },
+                        height: { ideal: targetH },
+                        aspectRatio: isLandscape ? { ideal: 16/9 } : { ideal: 9/16 }
+                    },
+                    audio: false
+                },
+                // 2. Facing mode fallback
+                {
+                    video: {
+                        facingMode: { ideal: facingMode }
+                    },
+                    audio: false
+                },
+                // 3. Fallback: native video
+                {
+                    video: true,
+                    audio: false
+                }
+            ];
+        }
+
+        async function initCamera(isUserClick = false) {
+            const tapOverlay = document.getElementById('tap-to-start-overlay');
+            addLog(`initCamera invoked (User Gesture: ${isUserClick ? 'YES' : 'AUTO'})`, 'info');
+
+            // Detect in-app browsers
+            detectInAppBrowser();
+
+            // Check Secure Context
+            const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+            const isHttps = window.location.protocol === 'https:';
+
+            addLog(`Origin: ${window.location.origin} (Secure: ${isHttps || isLocal ? 'YES' : 'NO'})`, isHttps || isLocal ? 'info' : 'warn');
+
+            // Polyfill navigator.mediaDevices
+            if (!navigator.mediaDevices) {
+                navigator.mediaDevices = {};
+            }
+            if (!navigator.mediaDevices.getUserMedia) {
+                const legacy = navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.getUserMedia;
+                if (legacy) {
+                    navigator.mediaDevices.getUserMedia = function(c) {
+                        return new Promise((res, rej) => legacy.call(navigator, c, res, rej));
+                    };
+                    addLog("Using legacy getUserMedia polyfill", "info");
+                }
+            }
+
+            if (!navigator.mediaDevices.getUserMedia) {
+                addLog("Camera API is not supported or is blocked in this browser.", "error");
+                securityModal.style.display = 'flex';
+                if (!isHttps && !isLocal) {
+                    modalTitle.innerText = "HTTPS Connection Required";
+                    modalDesc.innerHTML = "Modern mobile browsers strictly disable camera access on plain HTTP. Please switch to the secure HTTPS stream link.";
+                    httpsRedirectBtn.style.display = 'block';
+                    retryPermBtn.style.display = 'none';
+                } else {
+                    modalTitle.innerText = "Camera Access Blocked";
+                    modalDesc.innerHTML = "This browser/in-app scanner blocks camera hardware access. Tap the menu icon (⋮) and choose <b>'Open in Chrome'</b> or <b>'Open in Safari'</b>.";
+                    httpsRedirectBtn.style.display = 'none';
+                    retryPermBtn.style.display = 'block';
+                }
+                setStatus("Camera Blocked", "error");
+                return;
+            }
+
+            setStatus("Opening Camera...", "connecting");
+            addLog("Requesting camera stream from device...", "info");
+
+            try {
+                if (currentStream) {
+                    currentStream.getTracks().forEach(t => t.stop());
+                }
+
+                const selectedPreset = resSelect.value || '480p';
+                const constraintTiers = getAdaptiveConstraints(selectedPreset, currentFacingMode);
+
+                let stream = null;
+                let lastErr = null;
+                for (let i = 0; i < constraintTiers.length; i++) {
+                    try {
+                        addLog(`Trying camera constraint tier ${i + 1}...`, 'info');
+                        stream = await navigator.mediaDevices.getUserMedia(constraintTiers[i]);
+                        if (stream) {
+                            addLog(`Constraint tier ${i + 1} succeeded!`, 'success');
+                            break;
+                        }
+                    } catch (e) {
+                        addLog(`Tier ${i + 1} rejected: ${e.name} (${e.message})`, 'warn');
+                        lastErr = e;
+                    }
+                }
+
+                if (!stream) {
+                    throw lastErr || new Error("Unable to access camera device.");
+                }
+
+                currentStream = stream;
+                video.srcObject = currentStream;
+                video.muted = true;
+                video.playsInline = true;
+                video.setAttribute('playsinline', '');
+                video.setAttribute('webkit-playsinline', '');
+                video.setAttribute('muted', '');
+
+                try {
+                    await video.play();
+                    addLog("Video playback started successfully", "success");
+                } catch (playErr) {
+                    addLog(`video.play() warning: ${playErr.name} - ${playErr.message}`, 'warn');
+                }
+
+                video.onloadedmetadata = () => {
+                    addLog(`Camera resolution: ${video.videoWidth}×${video.videoHeight}`, 'success');
+                    updateCanvasDimensions();
+                    updateTelemetryDisplay();
+                };
+
+                updateCanvasDimensions();
+                if (tapOverlay) tapOverlay.style.display = 'none';
+                securityModal.style.display = 'none';
+                setStatus("Camera Active", "live");
+                addLog("Camera active and ready to stream", "success");
+                updateTelemetryDisplay();
+
+                // Connect WebSocket
+                connectWebSocket();
+            } catch (err) {
+                addLog(`Camera error: ${err.name} - ${err.message}`, 'error');
+                console.error("Camera access error:", err);
+                securityModal.style.display = 'flex';
+                
+                if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+                    modalTitle.innerText = "Camera Permission Denied";
+                    modalDesc.innerText = "Camera access was denied. Tap 'Grant Camera Permission' below and tap 'Allow' when your browser asks for permission.";
+                    httpsRedirectBtn.style.display = 'none';
+                    retryPermBtn.style.display = 'block';
+                } else if (!isHttps && !isLocal) {
+                    modalTitle.innerText = "Camera Blocked by Browser";
+                    modalDesc.innerText = "Mobile browsers require a secure HTTPS connection to stream camera frames. Tap below to proceed via HTTPS.";
+                    httpsRedirectBtn.style.display = 'block';
+                    retryPermBtn.style.display = 'none';
+                } else {
+                    modalTitle.innerText = "Camera Error (" + err.name + ")";
+                    modalDesc.innerText = err.message || "Failed to initialize camera device. Please ensure no other app is using the camera.";
+                    retryPermBtn.style.display = 'block';
+                }
+                setStatus("Camera Error", "error");
+            }
+        }
+
+        async function flipCamera() {
+            currentFacingMode = currentFacingMode === 'environment' ? 'user' : 'environment';
+            addLog(`Switching camera field to: ${currentFacingMode}`, 'info');
+            await initCamera(true);
+            sendTelemetryMeta();
+        }
+
+        async function changeResolutionPreset() {
+            addLog(`Changed resolution preset to: ${resSelect.value}`, 'info');
+            await initCamera(true);
+            updateCanvasDimensions();
+            updateTelemetryDisplay();
+            sendTelemetryMeta();
+        }
+
+        function sendTelemetryMeta() {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                try {
+                    const qVal = qualitySelect.value;
+                    const q = qVal === 'auto' ? dynamicQuality : (parseFloat(qVal) || 0.65);
+                    const metaPayload = {
+                        type: 'meta',
+                        width: canvas.width,
+                        height: canvas.height,
+                        quality: q,
+                        fps: measuredFps > 0 ? measuredFps : targetFps,
+                        target_fps: targetFps,
+                        lens: currentFacingMode === 'environment' ? 'Back Lens' : 'Front Lens',
+                        signal_bars: signalBars,
+                        signal_quality: signalQualityText,
+                        rtt_ms: Math.round(smoothedRtt)
+                    };
+                    ws.send(JSON.stringify(metaPayload));
+                } catch (e) {}
+            }
+        }
+
+        function connectWebSocket() {
+            if (ws && (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING)) {
+                return;
+            }
+
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsUrl = `${protocol}//${window.location.host}/ws/camera/${cameraId}?token=${encodeURIComponent(token)}`;
+            
+            addLog(`Connecting WebSocket: ${wsUrl}`, 'info');
+            setStatus("Connecting to AI...", "connecting");
+            ws = new WebSocket(wsUrl);
+
+            ws.onopen = () => {
+                addLog("WebSocket connected to AI engine!", "success");
+                setStatus("Streaming Live", "live");
+                isStreaming = true;
+                streamToggleBtn.innerText = "⏹ Stop Stream";
+                streamToggleBtn.className = "icon-btn danger";
+                startPingPong();
+                sendTelemetryMeta();
+                startSendingFrames();
+                addLog(`Streaming live frames (Target: ${targetFps} FPS, Interval: ${Math.round(currentTargetInterval)}ms)`, 'success');
+            };
+
+            ws.onmessage = (event) => {
+                try {
+                    const msg = JSON.parse(event.data);
+                    if (msg.type === 'pong' && msg.t) {
+                        const sampleRtt = Math.max(1, performance.now() - msg.t);
+                        smoothedRtt = smoothedRtt === 0 ? sampleRtt : (0.7 * smoothedRtt + 0.3 * sampleRtt);
+                        evaluateSignalAndAdjustRate();
+                    }
+                } catch (e) {}
+            };
+
+            ws.onclose = () => {
+                addLog("WebSocket disconnected. Reconnecting in 2.5s...", "warn");
+                setStatus("Reconnecting...", "connecting");
+                isStreaming = false;
+                stopPingPong();
+                if (loopTimer) cancelAnimationFrame(loopTimer);
+                setTimeout(() => {
+                    if (video.srcObject && video.srcObject.active) {
+                        connectWebSocket();
+                    }
+                }, 2500);
+            };
+
+            ws.onerror = (err) => {
+                addLog("WebSocket error! Please check network connectivity.", "error");
+                console.error("WS error:", err);
+                setStatus("Connection Error", "error");
+            };
+        }
+
+        let isEncoding = false;
+        let lastSendTime = 0;
+
+        function startSendingFrames() {
+            sendTelemetryMeta();
+
+            function framePump(timestamp) {
+                if (!isStreaming) return;
+
+                if (ws && ws.readyState === WebSocket.OPEN && video.readyState >= 2) {
+                    // Backpressure check: Skip frame only if socket is congested (>32KB backlog)
+                    if (ws.bufferedAmount > 32 * 1024) {
+                        consecutiveCleanCycles = 0;
+                        loopTimer = requestAnimationFrame(framePump);
+                        return;
+                    } else {
+                        consecutiveCleanCycles++;
+                    }
+
+                    if (timestamp - lastSendTime >= currentTargetInterval) {
+                        // Drop frame if previous toBlob is still processing (Zero lag accumulation!)
+                        if (!isEncoding && canvas.width > 0 && canvas.height > 0) {
+                            lastSendTime = timestamp;
+                            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                            const qVal = qualitySelect.value;
+                            const q = qVal === 'auto' ? dynamicQuality : (parseFloat(qVal) || 0.65);
+
+                            isEncoding = true;
+                            canvas.toBlob((blob) => {
+                                isEncoding = false;
+                                if (ws && ws.readyState === WebSocket.OPEN && blob) {
+                                    try {
+                                        // Pure binary WebSocket frame: Zero Base64 overhead, Zero lag
+                                        ws.send(blob);
+                                        frameCount++;
+                                    } catch (e) {}
+                                }
+                            }, 'image/jpeg', q);
+                        }
+
+                        // Measure true FPS accurately every second
+                        const now = performance.now();
+                        const timeDelta = now - lastFpsCheck;
+                        if (timeDelta >= 1000) {
+                            measuredFps = Math.round((frameCount * 1000) / timeDelta);
+                            frameCount = 0;
+                            lastFpsCheck = now;
+                            updateTelemetryDisplay();
+                            sendTelemetryMeta();
+                        }
+                    }
+                }
+                loopTimer = requestAnimationFrame(framePump);
+            }
+            loopTimer = requestAnimationFrame(framePump);
+        }
+
+
+        function toggleStream() {
+            if (isStreaming) {
+                isStreaming = false;
+                stopPingPong();
+                if (loopTimer) cancelAnimationFrame(loopTimer);
+                if (ws) ws.close();
+                streamToggleBtn.innerText = "▶ Start Stream";
+                streamToggleBtn.className = "icon-btn primary";
+                setStatus("Stream Paused", "ready");
+            } else {
+                connectWebSocket();
+            }
+        }
+
+        // Handle screen rotation / resizing dynamically
+        window.addEventListener('resize', () => {
+            updateCanvasDimensions();
+            updateTelemetryDisplay();
+        });
+
+        window.addEventListener('orientationchange', () => {
+            setTimeout(() => {
+                initCamera(true);
+            }, 350);
+        });
+
+        // Start initialization automatically
+        window.addEventListener('load', () => {
+            addLog("Page loaded. Checking camera hardware & permissions...", "info");
+            detectInAppBrowser();
+            initCamera(false).catch(err => {
+                addLog("Autoplay suppressed: tap 'Activate Phone Camera' to start.", "info");
+            });
+        });
+    </script>
+</body>
+</html>

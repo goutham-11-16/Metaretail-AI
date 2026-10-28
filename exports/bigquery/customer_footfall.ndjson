@@ -1,0 +1,16 @@
+{"customer_id": 101, "track_id": 101, "entry_time": "2026-10-06 10:45:00 UTC", "exit_time": "2026-10-06 10:50:15 UTC", "dwell_time_seconds": 314.3, "is_checked_out": true, "store_zone": "Zone-2"}
+{"customer_id": 102, "track_id": 102, "entry_time": "2026-10-06 10:59:00 UTC", "exit_time": "2026-10-06 11:02:40 UTC", "dwell_time_seconds": 219.7, "is_checked_out": true, "store_zone": "Zone-3"}
+{"customer_id": 103, "track_id": 103, "entry_time": "2026-10-06 10:57:00 UTC", "exit_time": "2026-10-06 11:00:20 UTC", "dwell_time_seconds": 199.6, "is_checked_out": true, "store_zone": "Zone-4"}
+{"customer_id": 104, "track_id": 104, "entry_time": "2026-10-06 11:46:00 UTC", "exit_time": "2026-10-06 11:48:31 UTC", "dwell_time_seconds": 150.3, "is_checked_out": true, "store_zone": "Zone-5"}
+{"customer_id": 105, "track_id": 105, "entry_time": "2026-10-06 09:43:00 UTC", "exit_time": "2026-10-06 09:47:21 UTC", "dwell_time_seconds": 260.7, "is_checked_out": true, "store_zone": "Zone-1"}
+{"customer_id": 106, "track_id": 106, "entry_time": "2026-10-06 12:13:00 UTC", "exit_time": "2026-10-06 12:16:10 UTC", "dwell_time_seconds": 189.9, "is_checked_out": true, "store_zone": "Zone-2"}
+{"customer_id": 107, "track_id": 107, "entry_time": "2026-10-06 09:35:00 UTC", "exit_time": "2026-10-06 09:38:24 UTC", "dwell_time_seconds": 203.5, "is_checked_out": true, "store_zone": "Zone-3"}
+{"customer_id": 108, "track_id": 108, "entry_time": "2026-10-06 12:36:00 UTC", "exit_time": "2026-10-06 12:37:54 UTC", "dwell_time_seconds": 113.5, "is_checked_out": true, "store_zone": "Zone-4"}
+{"customer_id": 109, "track_id": 109, "entry_time": "2026-10-06 11:39:00 UTC", "exit_time": "2026-10-06 11:40:56 UTC", "dwell_time_seconds": 115.4, "is_checked_out": true, "store_zone": "Zone-5"}
+{"customer_id": 110, "track_id": 110, "entry_time": "2026-10-06 12:21:00 UTC", "exit_time": "2026-10-06 12:25:12 UTC", "dwell_time_seconds": 251.3, "is_checked_out": true, "store_zone": "Zone-1"}
+{"customer_id": 111, "track_id": 111, "entry_time": "2026-10-06 11:13:00 UTC", "exit_time": "2026-10-06 11:17:47 UTC", "dwell_time_seconds": 286.6, "is_checked_out": true, "store_zone": "Zone-2"}
+{"customer_id": 112, "track_id": 112, "entry_time": "2026-10-06 10:42:00 UTC", "exit_time": "2026-10-06 10:46:48 UTC", "dwell_time_seconds": 287.3, "is_checked_out": true, "store_zone": "Zone-3"}
+{"customer_id": 113, "track_id": 113, "entry_time": "2026-10-06 13:20:00 UTC", "exit_time": null, "dwell_time_seconds": 53.9, "is_checked_out": false, "store_zone": "Zone-4"}
+{"customer_id": 114, "track_id": 114, "entry_time": "2026-10-06 13:27:00 UTC", "exit_time": null, "dwell_time_seconds": 52.0, "is_checked_out": false, "store_zone": "Zone-5"}
+{"customer_id": 115, "track_id": 115, "entry_time": "2026-10-06 13:22:00 UTC", "exit_time": null, "dwell_time_seconds": 85.4, "is_checked_out": false, "store_zone": "Zone-1"}
+{"customer_id": 116, "track_id": 201, "entry_time": "2026-10-07 05:35:28 UTC", "exit_time": null, "dwell_time_seconds": 0.0, "is_checked_out": false, "store_zone": "Zone-2"}
