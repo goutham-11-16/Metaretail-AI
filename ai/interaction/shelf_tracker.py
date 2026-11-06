@@ -106,7 +106,7 @@ class UniversalShelfTracker:
                 self.shelf_items[new_id] = ShelfItem(
                     item_id=new_id,
                     name=obj_name,
-                    category="Supermarket Item",
+                    category="Warehouse Item",
                     shelf_bbox=obj_bbox,
                     current_bbox=obj_bbox,
                     original_pos=obj_center,

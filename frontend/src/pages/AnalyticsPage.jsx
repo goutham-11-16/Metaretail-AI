@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BarChart3, TrendingUp, Package, Clock, ShoppingCart, AlertCircle, RefreshCw, Download, Sparkles, DollarSign, ShieldCheck, Flame, ArrowUpRight, Database, FileCode, Copy, Check } from 'lucide-react';
+import { BarChart3, TrendingUp, Package, Clock, ShoppingCart, AlertCircle, RefreshCw, Download, Sparkles, DollarSign, ShieldCheck, Flame, ArrowUpRight, Database, FileCode, Copy, Check, FileText } from 'lucide-react';
 import { EmptyState } from '../components/widgets/EmptyState';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card';
@@ -49,8 +49,13 @@ export function AnalyticsPage() {
   }, []);
 
   const handleDownloadCsv = () => {
-    toast.info('Generating store operations audit CSV...');
+    toast.info('Generating warehouse operations audit CSV...');
     window.location.href = '/api/analytics/export/csv';
+  };
+
+  const handleDownloadPdf = () => {
+    toast.info('Generating executive warehouse sales & inventory PDF report...');
+    window.open('/api/analytics/export/pdf', '_blank');
   };
 
   const handleExportBigQuery = async () => {
@@ -132,7 +137,10 @@ export function AnalyticsPage() {
           <Button size="sm" onClick={handleExportBigQuery} disabled={exportingBq} className="gap-2 font-semibold bg-emerald-600 hover:bg-emerald-700 text-white">
             <Database className="w-4 h-4" /> {exportingBq ? 'Exporting...' : 'Sync BigQuery'}
           </Button>
-          <Button size="sm" onClick={handleDownloadCsv} className="gap-2 font-semibold bg-primary text-primary-foreground">
+          <Button size="sm" onClick={handleDownloadPdf} className="gap-2 font-semibold bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm">
+            <FileText className="w-4 h-4" /> Sales Report PDF
+          </Button>
+          <Button size="sm" variant="outline" onClick={handleDownloadCsv} className="gap-2 font-semibold">
             <Download className="w-4 h-4" /> Audit CSV
           </Button>
         </div>

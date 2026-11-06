@@ -31,7 +31,7 @@ class GlobalShopperTracker:
     """
     Enterprise Multi-Camera Shopper Re-Identification.
     Fuses spatial zone topology, motion transit time, and torso HSV appearance signatures
-    to link local camera tracks into a single unified global shopper entity across the supermarket.
+    to link local camera tracks into a single unified global shopper entity across the warehouse.
     """
     def __init__(self, appearance_thresh: float = 0.60, max_transit_time: float = 60.0):
         self.appearance_thresh = appearance_thresh

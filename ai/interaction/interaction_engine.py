@@ -1,5 +1,5 @@
 """
-Production Supermarket Customer Action State Machine
+Production Warehouse Customer Action State Machine
 Accurately detects: APPROACH, PICKUP, EXAMINING, PUT_BACK (Leaved/Returned), and REMOVAL (Taken/Purchased).
 """
 from dataclasses import dataclass, field
@@ -54,7 +54,7 @@ class HeldItemState:
 
 class InteractionEngine:
     """
-    Advanced Supermarket Action State Machine.
+    Advanced Warehouse Action State Machine.
     Tracks whether a customer picked up an item, examined it, put it back (leaved it on shelf),
     or walked away with it (purchase/removal).
     Integrates Spatio-Temporal Hand-Object Interaction (HOI) verification.

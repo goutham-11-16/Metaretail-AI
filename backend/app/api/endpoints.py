@@ -1094,6 +1094,36 @@ def export_store_csv(db: Session = Depends(get_db)):
     )
 
 
+@router.get("/analytics/export/pdf", tags=["Executive Analytics"])
+def export_warehouse_pdf(db: Session = Depends(get_db)):
+    """
+    Generates a beautifully formatted executive PDF report for warehouse operations,
+    detailing sales breakdowns, itemized sold quantities, revenues, and inventory levels.
+    """
+    from backend.app.services.pdf_report_service import build_warehouse_pdf_report
+    
+    invoices = db.query(Invoice).order_by(Invoice.created_at.desc()).all()
+    products = db.query(Product).order_by(Product.name).all()
+    customers = db.query(Customer).all()
+    incidents = db.query(SecurityIncident).all()
+    
+    pdf_bytes = build_warehouse_pdf_report(
+        invoices=invoices,
+        products=products,
+        customers=customers,
+        incidents=incidents
+    )
+    
+    timestamp_str = datetime.utcnow().strftime('%Y%m%d_%H%M%S')
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f"attachment; filename=metaretail_warehouse_sales_audit_{timestamp_str}.pdf"
+        }
+    )
+
+
 # --- BigQuery AI/ML Integration & Data Sync ---
 from backend.app.services.bigquery_service import shared_bigquery_service
 from fastapi.responses import FileResponse

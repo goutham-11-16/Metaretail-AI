@@ -1,6 +1,6 @@
 """
 Production Honest Hybrid Object Detector for MetaRetail AI
-Detects real customers and any real supermarket product (Smartphones, Bottles, Cans, Cups, Snacks, Fruits, Packages).
+Detects real customers and any real warehouse product (Smartphones, Bottles, Cans, Cups, Snacks, Fruits, Packages).
 Zero fake hallucinations.
 """
 from dataclasses import dataclass

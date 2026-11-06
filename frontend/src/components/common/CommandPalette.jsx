@@ -131,11 +131,24 @@ export function CommandPalette({ isOpen, setIsOpen, isDark, toggleTheme, onOpenC
       badge: 'AI/ML'
     },
     {
+      id: 'act-pdf',
+      title: 'Download Executive Warehouse Sales PDF Report',
+      subtitle: 'Itemized sales, dispatched quantities, asset valuations, and GST breakdowns',
+      icon: FileText,
+      category: 'Warehouse Actions',
+      handler: () => {
+        window.open('/api/analytics/export/pdf', '_blank');
+        toast.success('Downloading warehouse executive sales PDF...');
+        setIsOpen(false);
+      },
+      badge: 'PDF'
+    },
+    {
       id: 'act-csv',
       title: 'Download Executive Audit CSV Report',
       subtitle: 'Direct export of transactions, GMV, and shrinkage logs',
       icon: Download,
-      category: 'Store Actions',
+      category: 'Warehouse Actions',
       handler: () => {
         window.open('/api/analytics/export/csv', '_blank');
         toast.success('Downloading audit CSV...');

@@ -1,6 +1,6 @@
 """
-Realistic Supermarket Store Catalog & Operational Activity Seeder for MetaRetail AI
-Generates authentic supermarket products with custom packaging images, realistic INR pricing,
+Realistic Warehouse Store Catalog & Operational Activity Seeder for MetaRetail AI
+Generates authentic warehouse products with custom packaging images, realistic INR pricing,
 barcodes, categories, customers, dwell times, interactions, carts, invoices, and security events.
 """
 import os
@@ -210,7 +210,7 @@ REALISTIC_PRODUCTS = [
 
 def generate_packaging_image(prod_data: dict, filepath: str):
     """
-    Renders a realistic 400x400 supermarket product packaging image with crisp styling,
+    Renders a realistic 400x400 warehouse product packaging image with crisp styling,
     contrasting branding banners, product text, badge accents, and barcode lines.
     """
     width, height = 400, 400
@@ -281,7 +281,7 @@ def generate_packaging_image(prod_data: dict, filepath: str):
 
 
 def seed_realistic_store():
-    print("🚀 Seeding Authentic Supermarket Store Catalog & Real Retail Activity...")
+    print("🚀 Seeding Authentic Warehouse Store Catalog & Real Retail Activity...")
     Base.metadata.create_all(bind=engine)
     db = SessionLocal()
 
@@ -306,7 +306,7 @@ def seed_realistic_store():
                 db.delete(p)
         db.commit()
 
-        # 2. Insert or update the 12 authentic supermarket products
+        # 2. Insert or update the 12 authentic warehouse products
         seeded_prods = {}
         for pdata in REALISTIC_PRODUCTS:
             sku = pdata["sku"]
@@ -658,8 +658,8 @@ def seed_realistic_store():
         except Exception as e:
             print(f"  Note: ViT classifier registration handled gracefully: {e}")
 
-        print("\n✨ Authentic Supermarket Store Catalog & Live Data Successfully Seeded!")
-        print(f"  • 12 Authentic Supermarket Products with custom packaging graphics")
+        print("\n✨ Authentic Warehouse Store Catalog & Live Data Successfully Seeded!")
+        print(f"  • 12 Authentic Warehouse Products with custom packaging graphics")
         print(f"  • 15 Real Customer trajectories (12 completed, 3 active in-store)")
         print(f"  • {interaction_count} Shelf interactions & replacement reasons")
         print(f"  • 3 Active virtual carts (Customer #113, #114, #115)")

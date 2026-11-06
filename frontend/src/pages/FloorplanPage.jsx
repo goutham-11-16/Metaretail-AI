@@ -247,7 +247,7 @@ export function FloorplanPage() {
                 <span>
                   {viewMode === '3d' 
                     ? '3D Digital Twin Simulation (Extruded Racks & Volumetric Vision Sensors)' 
-                    : 'Supermarket Floorplan Grid (1000m × 500m scale)'}
+                    : 'Warehouse Floorplan Grid (1000m × 500m scale)'}
                 </span>
               </div>
               <div className="flex items-center gap-4">

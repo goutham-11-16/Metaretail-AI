@@ -1,5 +1,5 @@
 """
-Supermarket Owner Intelligence & Product Abandonment Engine
+Warehouse Owner Intelligence & Product Abandonment Engine
 Tracks which products customers pick up, inspect, and replace (leave on shelf without buying)
 vs which products customers actually purchase, providing actionable store-owner insights.
 """
@@ -65,8 +65,8 @@ class AnalyticsSummary:
 
 class AnalyticsEngine:
     """
-    Core Supermarket Owner Business Intelligence Engine.
-    Enables store owners to see exactly which products customers pick up, inspect,
+    Core Warehouse Owner Business Intelligence Engine.
+    Enables warehouse managers and store owners to see exactly which products customers pick up, inspect,
     and put back/replace on shelves (lost sales) versus what they buy.
     """
     def __init__(self):

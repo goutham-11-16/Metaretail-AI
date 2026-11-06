@@ -1,5 +1,5 @@
 """
-Production Deep Metric Learning & Vision Classifier for Supermarket Products
+Production Deep Metric Learning & Vision Classifier for Warehouse Products
 Combines:
 1. Deep Convolutional Embeddings (PyTorch CSPDarknet 256-D L2-normalized feature representation)
 2. 3D Spatial HSV Color Histogram (256-bin color distribution invariant to lighting shifts)

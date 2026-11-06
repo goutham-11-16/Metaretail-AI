@@ -79,7 +79,7 @@ export function HumanMotionLabModal({ open, onOpenChange }) {
             const ctx = canvas.getContext('2d');
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // Draw Virtual Supermarket Shelf Zone Guide
+            // Draw Virtual Warehouse Shelf Zone Guide
             ctx.strokeStyle = 'rgba(239, 68, 68, 0.5)';
             ctx.lineWidth = 2;
             ctx.setLineDash([6, 6]);
@@ -92,7 +92,7 @@ export function HumanMotionLabModal({ open, onOpenChange }) {
 
             ctx.font = 'bold 12px Inter, sans-serif';
             ctx.fillStyle = 'rgba(239, 68, 68, 0.8)';
-            ctx.fillText('◄ VIRTUAL SUPERMARKET SHELF REACH THRESHOLD ►', 20, shelfY - 8);
+            ctx.fillText('◄ VIRTUAL WAREHOUSE SHELF REACH THRESHOLD ►', 20, shelfY - 8);
 
             // Draw based on selected tab
             sharedHumanTracker.drawOverlay(canvas, res, {
